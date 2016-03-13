@@ -144,7 +144,7 @@ $arrRequest['pg_encoding'] = 'windows-1251';
 /*
  * Platron Request
  */
-$arrRequest['cms_payment_module'] = 'BITRIX_UTF8';
+$arrRequest['cms_payment_module'] = 'BITRIX_CP1251';
 $arrRequest['pg_sig'] = PlatronSignature::make('payment.php', $arrRequest, $strSecretKey);
 
 print "<form name=\"payment\" method='".$strRequestMethod."' action='https://platron.ru/payment.php'";
