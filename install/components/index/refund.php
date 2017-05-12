@@ -7,7 +7,10 @@ $strScriptName = PlatronSignature::getOurScriptName();
 
 $arrRequest = PlatronIO::getRequest();
 
-$objShop = CSalePaySystemAction::GetList('', array("PS_NAME"=>$arrRequest['PAYMENT_SYSTEM']));
+$nOrderId = intval(isset($arrRequest["pg_order_id"]) ? $arrRequest["pg_order_id"] : 0);
+$arOrder = CSaleOrder::GetByID($nOrderId);
+$objShop = CSalePaySystemAction::GetList(array(), array('PAY_SYSTEM_ID'=>$arOrder['PAY_SYSTEM_ID'], 'PERSON_TYPE_ID'=>$arOrder['PERSON_TYPE_ID']));
+
 $arrShop = $objShop->Fetch();
 if(!empty($arrShop))
 	$arrShopParams = unserialize($arrShop['PARAMS']);
@@ -19,7 +22,6 @@ else
 
 
 $strSecretKey = $arrShopParams['SHOP_SECRET_KEY']['VALUE'];
-$nOrderId = intval($arrRequest["pg_order_id"]);
 
 if(!($arrOrder = CSaleOrder::GetByID($nOrderId)))
 	PlatronIO::makeResponse($strScriptName, $strSecretKey, 'error',
