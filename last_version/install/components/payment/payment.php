@@ -105,9 +105,9 @@ while ($arrItem = $basketList->Fetch()) {
 if ($arrOrder['PRICE_DELIVERY'] > 0) {
 	$ofdReceiptItem = new OfdReceiptItem();
 	if (toUpper(LANG_CHARSET) == "WINDOWS-1251") {
-		$ofdReceiptItem->label = iconv('cp1251', 'utf-8', 'Доставка');
+		$ofdReceiptItem->label = iconv('cp1251', 'utf-8', GetMessage('OFD_DELIVERY_DESCR'));
 	} else {
-		$ofdReceiptItem->label = 'Доставка';
+		$ofdReceiptItem->label = GetMessage('OFD_DELIVERY_DESCR');
 	}
 	$ofdReceiptItem->amount = $arrOrder['PRICE_DELIVERY'];
 	$ofdReceiptItem->price = $arrOrder['PRICE_DELIVERY'];

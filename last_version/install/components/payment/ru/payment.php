@@ -60,5 +60,6 @@ $MESS["OFD_SEND_RECEIPT_DESCR"] = "Отправить данные заказа для формирования чека
 
 $MESS["OFD_VAT"] = "Ставка НДС";
 $MESS["OFD_VAT_DESCR"] = "Указывается в чеке отправляемом в ОФД";
+$MESS["OFD_DELIVERY_DESCR"] = "Доставка";
 
 ?>
