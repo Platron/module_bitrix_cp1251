@@ -18,6 +18,18 @@ foreach($arrStatusName as $key => $value){
 	);
 }
 
+$vatValues = array(
+	'0' => '0%',
+	'10' => '10%',
+	'18' => '18%',
+	'110' => '10/110',
+	'118' => '18/118',
+);
+$vatSelectValues = array();
+foreach ($vatValues as $key => $value) {
+	$vatSelectValues[$key] = array('NAME' => $value);
+}
+
 $arPSCorrespondence = array(
 		"SHOP_MERCHANT_ID" => array(
 				"NAME" => GetMessage("SHOP_MERCHANT_ID"),
@@ -127,5 +139,16 @@ $arPSCorrespondence = array(
 				"VALUE" => "",
 				"TYPE" => ""
 			),
+		"OFD_SEND_RECEIPT" => array(
+			"NAME" => GetMessage("OFD_SEND_RECEIPT"),
+			"DESCR" => GetMessage("OFD_SEND_RECEIPT_DESCR"),
+			"VALUE" => "Y",
+		),
+		"OFD_VAT" => array(
+			"NAME" => GetMessage("OFD_VAT"),
+			"DESCR" => GetMessage("OFD_VAT_DESCR"),
+			"VALUE" => $vatSelectValues,
+			"TYPE" => "SELECT",
+		),
 	);
 ?>

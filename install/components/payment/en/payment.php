@@ -54,4 +54,11 @@ $MESS["USE_NEW_EMAIL"] = "e-mail";
 
 $MESS["PS_NAME"] = "Название ПС";
 $MESS["PS_NAME_DESCR"] = "Название платежной системы (pg_payment_system).";
+
+$MESS["OFD_SEND_RECEIPT"] = "Создать чек в ОФД";
+$MESS["OFD_SEND_RECEIPT_DESCR"] = "Отправить данные заказа для формирования чека в ОФД";
+
+$MESS["OFD_VAT"] = "Ставка НДС";
+$MESS["OFD_VAT_DESCR"] = "Указывается в чеке отправляемом в ОФД";
+
 ?>

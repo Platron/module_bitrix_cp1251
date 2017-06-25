@@ -86,14 +86,41 @@ $arrRequest['pg_amount']      = $nAmount;
 
 $basketList = CSaleBasket::GetList(array(), array("ORDER_ID" => $nOrderId));
 $arrItems = array();
+$ofdReceiptItems = array();
 while ($arrItem = $basketList->Fetch()) {
-   $arrItems[] = $arrItem['NAME'].', ';
+	$arrItems[] = $arrItem['NAME'].', ';
+	
+	$ofdReceiptItem = new OfdReceiptItem();
+	if (toUpper(LANG_CHARSET) == "WINDOWS-1251") {
+		$ofdReceiptItem->label = iconv('cp1251', 'utf-8', $arrItem['NAME']);
+	} else {
+		$ofdReceiptItem->label = $arrItem['NAME'];
+	}
+	$ofdReceiptItem->amount = $arrItem['PRICE'] * $arrItem['QUANTITY'];
+	$ofdReceiptItem->price = $arrItem['BASE_PRICE'];
+	$ofdReceiptItem->quantity = $arrItem['QUANTITY'];
+	$ofdReceiptItem->vat = CSalePaySystemAction::GetParamValue("OFD_VAT");
+	$ofdReceiptItems[] = $ofdReceiptItem;
+}
+if ($arrOrder['PRICE_DELIVERY'] > 0) {
+	$ofdReceiptItem = new OfdReceiptItem();
+	if (toUpper(LANG_CHARSET) == "WINDOWS-1251") {
+		$ofdReceiptItem->label = iconv('cp1251', 'utf-8', 'Доставка');
+	} else {
+		$ofdReceiptItem->label = 'Доставка';
+	}
+	$ofdReceiptItem->amount = $arrOrder['PRICE_DELIVERY'];
+	$ofdReceiptItem->price = $arrOrder['PRICE_DELIVERY'];
+	$ofdReceiptItem->quantity = 1;
+	$ofdReceiptItem->vat = 18;
+	$ofdReceiptItems[] = $ofdReceiptItem;
 }
 $arrRequest['pg_description'] = 'Order ID: '.$nOrderId;
 $arrRequest['pg_user_phone'] = $strCustomerPhone;
 $arrRequest['pg_user_contact_email'] = $strCustomerEmail;
 $arrRequest['pg_user_email'] = $strCustomerEmail;
-$arrRequest['pg_user_ip'] = $_SERVER['REMOTE_ADDR'];
+//$arrRequest['pg_user_ip'] = $_SERVER['REMOTE_ADDR'];
+
 
 if(!empty($strSiteUrl))
 	$arrRequest['pg_site_url']   = $strSiteUrl;
@@ -139,21 +166,42 @@ if($bTestingMode)
 $arrRequest['STATUS_FAILED'] = $strStatusFailed;
 $arrRequest['STATUS_REVOKED'] = $strStatusRevoked;
 
-$arrRequest['pg_encoding'] = 'windows-1251';
-
+$arrRequest['pg_encoding'] = LANG_CHARSET;
 /*
  * Platron Request
  */
-$arrRequest['cms_payment_module'] = 'BITRIX_CP1251';
-$arrRequest['pg_sig'] = PlatronSignature::make('payment.php', $arrRequest, $strSecretKey);
+$arrRequest['cms_payment_module'] = 'BITRIX_'.LANG_CHARSET;
+$arrRequest['pg_sig'] = PlatronSignature::make('init_payment.php', $arrRequest, $strSecretKey);
 
-print "<form name=\"payment\" method='".$strRequestMethod."' action='https://platron.ru/payment.php'";
-foreach($arrRequest as $key => $value) {
-	print "<label for=''>				<input type='hidden' name='".$key."' value='".$value."' />			</label>";
+$initPaymentUrl = 'https://www.platron.ru/init_payment.php';
+$requestUrl = $initPaymentUrl . '?' . http_build_query($arrRequest);
+$response = file_get_contents($requestUrl);
+$responseElement = new SimpleXMLElement($response);
+if ($responseElement->pg_status != 'ok') {
+	throw new Exception('Error while create platron transaction: ' . $responseElement->pg_error_description);
 }
 
-print "<input type=\"submit\"></form>";
-?>
-<script>
-	document.payment.submit();
-</script>
+if (CSalePaySystemAction::GetParamValue("OFD_SEND_RECEIPT") == 'Y') {
+
+	$paymentId = $responseElement->pg_payment_id;
+
+	$ofdReceiptRequest = new OfdReceiptRequest($nMerchantId, $paymentId);
+	$ofdReceiptRequest->items = $ofdReceiptItems;
+	$ofdReceiptRequest->prepare();
+	$ofdReceiptRequest->sign($strSecretKey);
+
+	$http = new \Bitrix\Main\Web\HttpClient();
+	$http->post('https://www.platron.ru/receipt.php', array('pg_xml'=>$ofdReceiptRequest->asXml()));
+	if ($http->getStatus() !== 200) {
+		throw new Exception('Bad http status from request to https://www.platron.ru/receipt.php: ' . $http->getStatus());
+	}
+
+	$ofdReceiptResponse = new SimpleXMLElement($http->getResult());
+	if ($ofdReceiptResponse->pg_status != 'ok') {
+		throw new Exception('Error while create platron receipt: ' . $ofdReceiptResponse->pg_error_description);
+	}
+
+}
+
+LocalRedirect($responseElement->pg_redirect_url, true);
+exit;
