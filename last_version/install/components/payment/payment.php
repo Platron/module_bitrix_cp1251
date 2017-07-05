@@ -96,8 +96,12 @@ while ($arrItem = $basketList->Fetch()) {
 	} else {
 		$ofdReceiptItem->label = $arrItem['NAME'];
 	}
-	$ofdReceiptItem->amount = $arrItem['PRICE'] * $arrItem['QUANTITY'];
-	$ofdReceiptItem->price = $arrItem['BASE_PRICE'];
+	$ofdReceiptItem->amount = round($arrItem['PRICE'] * $arrItem['QUANTITY'], 2);
+	if (isset($arrItem['BASE_PRICE']) && $arrItem['BASE_PRICE'] > 0) {
+		$ofdReceiptItem->price = round($arrItem['BASE_PRICE'], 2);
+	} else {
+		$ofdReceiptItem->price = round($arrItem['PRICE'], 2);
+	}
 	$ofdReceiptItem->quantity = $arrItem['QUANTITY'];
 	$ofdReceiptItem->vat = CSalePaySystemAction::GetParamValue("OFD_VAT");
 	$ofdReceiptItems[] = $ofdReceiptItem;
