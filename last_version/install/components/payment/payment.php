@@ -96,6 +96,7 @@ while ($arrItem = $basketList->Fetch()) {
 	} else {
 		$ofdReceiptItem->label = $arrItem['NAME'];
 	}
+	$ofdReceiptItem->label = mb_substr($ofdReceiptItem->label, 0, 128);
 	$ofdReceiptItem->amount = round($arrItem['PRICE'] * $arrItem['QUANTITY'], 2);
 	if (isset($arrItem['BASE_PRICE']) && $arrItem['BASE_PRICE'] > 0) {
 		$ofdReceiptItem->price = round($arrItem['BASE_PRICE'], 2);
