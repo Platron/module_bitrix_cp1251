@@ -222,7 +222,7 @@ try {
 } catch (Exception $e) {
 	AddMessage2Log($e->getMessage, 'platron');
 	//echo '<p class="errortext">' . GetMessage("PLATRON_CREATE_PAYMENT_FAILED"); . '</p>';
-	$errorMessage = 'Не удалось создать платеж, попробуйте позже или обратитесь в магазин';
+	$errorMessage = GetMessage("PLATRON_ERROR_TRY_LATER");
 }
 
 ?>
@@ -230,6 +230,6 @@ try {
 	<p><font class="errortext"><?= $errorMessage ?></font></p>
 <?php else: ?>
 	<form method="post" action="<?= $initPaymentResponse->pg_redirect_url ?>">
-		<p><input name="BuyButton" value="Оплатить" type="submit"></p>
+		<p><input name="BuyButton" value="<?= GetMessage("PLATRON_PAY_BUTTON") ?>" type="submit"></p>
 	</form>
 <?php endif; ?>
