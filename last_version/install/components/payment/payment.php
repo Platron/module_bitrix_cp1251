@@ -202,6 +202,11 @@ if (CSalePaySystemAction::GetParamValue("OFD_SEND_RECEIPT") == 'Y') {
 	}
 
 }
-
-LocalRedirect($responseElement->pg_redirect_url, true);
-exit;
+?>
+<?php if (isset($errorMsg)): ?>
+	<p class="errortext"><?= $errorMsg ?></p>
+<?php else: ?>
+	<form method="post" action="<?= $responseElement->pg_redirect_url ?>">
+		<p><input name="BuyButton" value="Оплатить" type="submit"></p>
+	</form>
+<?php endif; ?>
