@@ -1,6 +1,38 @@
 <?php
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 
+function doApiRequest($scriptName, $params, $secretKey) {
+	$response = QueryGetData(
+		'www.platron.ru',
+		80,
+		'/' . $scriptName,
+		http_build_query($params),
+		$errorNumber,
+		$errorText,
+		'POST'
+	);
+
+	if (!$response) {
+		throw new Exception('Error while request to ' . $scriptName . ': ' . $errorNumber . ', ' . $errorText);
+	}
+
+	try {
+		$responseXml = new SimpleXMLElement($response);
+	} catch (Exception $e) {
+		throw new Exception('Error response from ' . $scriptName . ': ' . $e->getMessage());
+	}
+
+	if (!PlatronSignature::checkXml($scriptName, $responseXml, $secretKey)) {
+		throw new Exception('Error response from ' . $scriptName . ': invalid response signature');
+	}
+
+	if ($responseXml->pg_status != 'ok') {
+		throw new Exception('Error response from ' . $scriptName . ': ' . $responseXml->pg_error_description);
+	}
+
+	return $responseXml;
+}
+
 include(GetLangFileName(dirname(__FILE__)."/", "/payment.php"));
 
 CModule::IncludeModule("sale");
@@ -173,40 +205,31 @@ $arrRequest['pg_encoding'] = LANG_CHARSET;
 $arrRequest['cms_payment_module'] = 'BITRIX_'.LANG_CHARSET;
 $arrRequest['pg_sig'] = PlatronSignature::make('init_payment.php', $arrRequest, $strSecretKey);
 
-$initPaymentUrl = 'https://www.platron.ru/init_payment.php';
-$requestUrl = $initPaymentUrl . '?' . http_build_query($arrRequest);
-$response = file_get_contents($requestUrl);
-$responseElement = new SimpleXMLElement($response);
-if ($responseElement->pg_status != 'ok') {
-	throw new Exception('Error while create platron transaction: ' . $responseElement->pg_error_description);
+try {
+	$initPaymentResponse = doApiRequest('init_payment.php', $arrRequest, $strSecretKey);
+
+	if (CSalePaySystemAction::GetParamValue("OFD_SEND_RECEIPT") == 'Y') {
+
+		$paymentId = $initPaymentResponse->pg_payment_id;
+
+		$ofdReceiptRequest = new OfdReceiptRequest($nMerchantId, $paymentId);
+		$ofdReceiptRequest->items = $ofdReceiptItems;
+		$ofdReceiptRequest->prepare();
+		$ofdReceiptRequest->sign($strSecretKey);
+
+		$ofdReceiptResponse = doApiRequest('receipt.php', array('pg_xml'=>$ofdReceiptRequest->asXml()), $strSecretKey);
+	}
+} catch (Exception $e) {
+	AddMessage2Log($e->getMessage, 'platron');
+	//echo '<p class="errortext">' . GetMessage("PLATRON_CREATE_PAYMENT_FAILED"); . '</p>';
+	$errorMessage = 'Не удалось создать платеж, попробуйте позже или обратитесь в магазин';
 }
 
-if (CSalePaySystemAction::GetParamValue("OFD_SEND_RECEIPT") == 'Y') {
-
-	$paymentId = $responseElement->pg_payment_id;
-
-	$ofdReceiptRequest = new OfdReceiptRequest($nMerchantId, $paymentId);
-	$ofdReceiptRequest->items = $ofdReceiptItems;
-	$ofdReceiptRequest->prepare();
-	$ofdReceiptRequest->sign($strSecretKey);
-
-	$http = new \Bitrix\Main\Web\HttpClient();
-	$http->post('https://www.platron.ru/receipt.php', array('pg_xml'=>$ofdReceiptRequest->asXml()));
-	if ($http->getStatus() !== 200) {
-		throw new Exception('Bad http status from request to https://www.platron.ru/receipt.php: ' . $http->getStatus());
-	}
-
-	$ofdReceiptResponse = new SimpleXMLElement($http->getResult());
-	if ($ofdReceiptResponse->pg_status != 'ok') {
-		throw new Exception('Error while create platron receipt: ' . $ofdReceiptResponse->pg_error_description);
-	}
-
-}
 ?>
-<?php if (isset($errorMsg)): ?>
-	<p class="errortext"><?= $errorMsg ?></p>
+<?php if (isset($errorMessage)): ?>
+	<p><font class="errortext"><?= $errorMessage ?></font></p>
 <?php else: ?>
-	<form method="post" action="<?= $responseElement->pg_redirect_url ?>">
+	<form method="post" action="<?= $initPaymentResponse->pg_redirect_url ?>">
 		<p><input name="BuyButton" value="Оплатить" type="submit"></p>
 	</form>
 <?php endif; ?>
