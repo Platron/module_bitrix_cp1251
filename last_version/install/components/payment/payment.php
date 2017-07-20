@@ -141,8 +141,7 @@ if ($arrOrder['PRICE_DELIVERY'] > 0) {
 	} else {
 		$ofdReceiptItem->label = GetMessage('OFD_DELIVERY_DESCR');
 	}
-	$ofdReceiptItem->amount = $arrOrder['PRICE_DELIVERY'];
-	$ofdReceiptItem->price = $arrOrder['PRICE_DELIVERY'];
+	$ofdReceiptItem->price = round($arrOrder['PRICE_DELIVERY'], 2);
 	$ofdReceiptItem->quantity = 1;
 	$ofdReceiptItem->vat = 18;
 	$ofdReceiptItems[] = $ofdReceiptItem;
