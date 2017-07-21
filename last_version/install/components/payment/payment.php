@@ -1,38 +1,6 @@
 <?php
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 
-function doApiRequest($scriptName, $params, $secretKey) {
-	$response = QueryGetData(
-		'www.platron.ru',
-		80,
-		'/' . $scriptName,
-		http_build_query($params),
-		$errorNumber,
-		$errorText,
-		'POST'
-	);
-
-	if (!$response) {
-		throw new Exception('Error while request to ' . $scriptName . ': ' . $errorNumber . ', ' . $errorText);
-	}
-
-	try {
-		$responseXml = new SimpleXMLElement($response);
-	} catch (Exception $e) {
-		throw new Exception('Error response from ' . $scriptName . ': ' . $e->getMessage());
-	}
-
-	if (!PlatronSignature::checkXml($scriptName, $responseXml, $secretKey)) {
-		throw new Exception('Error response from ' . $scriptName . ': invalid response signature');
-	}
-
-	if ($responseXml->pg_status != 'ok') {
-		throw new Exception('Error response from ' . $scriptName . ': ' . $responseXml->pg_error_description);
-	}
-
-	return $responseXml;
-}
-
 include(GetLangFileName(dirname(__FILE__)."/", "/payment.php"));
 
 CModule::IncludeModule("sale");
@@ -205,7 +173,7 @@ $arrRequest['cms_payment_module'] = 'BITRIX_'.LANG_CHARSET;
 $arrRequest['pg_sig'] = PlatronSignature::make('init_payment.php', $arrRequest, $strSecretKey);
 
 try {
-	$initPaymentResponse = doApiRequest('init_payment.php', $arrRequest, $strSecretKey);
+	$initPaymentResponse = PlatronIO::doApiRequest('init_payment.php', $arrRequest, $strSecretKey);
 
 	if (CSalePaySystemAction::GetParamValue("OFD_SEND_RECEIPT") == 'Y') {
 
@@ -216,7 +184,7 @@ try {
 		$ofdReceiptRequest->prepare();
 		$ofdReceiptRequest->sign($strSecretKey);
 
-		$ofdReceiptResponse = doApiRequest('receipt.php', array('pg_xml'=>$ofdReceiptRequest->asXml()), $strSecretKey);
+		$ofdReceiptResponse = PlatronIO::doApiRequest('receipt.php', array('pg_xml'=>$ofdReceiptRequest->asXml()), $strSecretKey);
 	}
 } catch (Exception $e) {
 	AddMessage2Log($e->getMessage, 'platron');

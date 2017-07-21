@@ -1,5 +1,37 @@
 <?php
 class PlatronIO {
+	public static function doApiRequest($scriptName, $params, $secretKey) {
+		$response = QueryGetData(
+			'www.platron.ru',
+			80,
+			'/' . $scriptName,
+			http_build_query($params),
+			$errorNumber,
+			$errorText,
+			'POST'
+		);
+
+		if (!$response) {
+			throw new Exception('Error while request to ' . $scriptName . ': ' . $errorNumber . ', ' . $errorText);
+		}
+
+		try {
+			$responseXml = new SimpleXMLElement($response);
+		} catch (Exception $e) {
+			throw new Exception('Error response from ' . $scriptName . ': ' . $e->getMessage());
+		}
+
+		if (!PlatronSignature::checkXml($scriptName, $responseXml, $secretKey)) {
+			throw new Exception('Error response from ' . $scriptName . ': invalid response signature');
+		}
+
+		if ($responseXml->pg_status != 'ok') {
+			throw new Exception('Error response from ' . $scriptName . ': ' . $responseXml->pg_error_description);
+		}
+
+		return $responseXml;
+	}
+
 	static public function getRequest ()
 	{
 		global $HTTP_RAW_POST_DATA;
