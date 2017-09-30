@@ -124,7 +124,7 @@ $arrRequest['pg_user_email'] = $strCustomerEmail;
 if(!empty($strSiteUrl))
 	$arrRequest['pg_site_url']   = $strSiteUrl;
 else
-	$arrRequest['pg_sire_url']		= "http://".$_SERVER['HTTP_HOST'];
+	$arrRequest['pg_sire_url']		= "https://".$_SERVER['HTTP_HOST'];
 if(!empty($strCheckUrl))
 	$arrRequest['pg_check_url']   = $strCheckUrl;
 else
