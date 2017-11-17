@@ -10,11 +10,13 @@ class PlatronIO {
 
 		$response = curl_exec ($ch);
 
-		curl_close ($ch);
-
-		if (!$response) {
-			throw new Exception('Error while request to ' . $scriptName . ': ' . $errorNumber . ', ' . $errorText);
+		if ($response === false) {
+			$errorNumber = curl_errno($ch);
+			$errorText = curl_error($ch);
+			throw new Exception('Error while request to ' . $scriptName . ': (' . $errorNumber . ') ' . $errorText);
 		}
+
+		curl_close ($ch);
 
 		try {
 			$responseXml = new SimpleXMLElement($response);
