@@ -187,7 +187,7 @@ try {
 		$ofdReceiptResponse = PlatronIO::doApiRequest('receipt.php', array('pg_xml'=>$ofdReceiptRequest->asXml()), $strSecretKey);
 	}
 } catch (Exception $e) {
-	AddMessage2Log($e->getMessage, 'platron');
+	AddMessage2Log($e->getMessage(), 'platron');
 	//echo '<p class="errortext">' . GetMessage("PLATRON_CREATE_PAYMENT_FAILED"); . '</p>';
 	$errorMessage = GetMessage("PLATRON_ERROR_TRY_LATER");
 }
