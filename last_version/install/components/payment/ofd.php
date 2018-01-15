@@ -62,7 +62,7 @@ class OfdReceiptRequest
 				foreach ($paramValue as $itemParams) {
 					$itemElement = $xmlElement->addChild($paramName);
 					foreach ($itemParams as $itemParamName => $itemParamValue) {
-						$itemElement->addChild($itemParamName, $itemParamValue);
+						$itemElement->$itemParamName = $itemParamValue;
 					}
 				}
 				continue;
