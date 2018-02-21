@@ -197,6 +197,10 @@ try {
 	<p><font class="errortext"><?= $errorMessage ?></font></p>
 <?php else: ?>
 	<form method="post" action="<?= $initPaymentResponse->pg_redirect_url ?>">
-		<p><input name="BuyButton" value="<?= GetMessage("PLATRON_PAY_BUTTON") ?>" type="submit"></p>
+		<?php if (file_exists(dirname(__FILE__) . '/custom_pay_button.php')): ?>
+			<?php include dirname(__FILE__) . '/custom_pay_button.php'; ?>
+		<?php else: ?>
+			<p><input name="BuyButton" value="<?= GetMessage("PLATRON_PAY_BUTTON") ?>" type="submit"></p>
+		<?php endif; ?>
 	</form>
 <?php endif; ?>
