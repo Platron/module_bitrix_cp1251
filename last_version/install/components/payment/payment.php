@@ -118,7 +118,6 @@ $arrRequest['pg_description'] = 'Order ID: '.$nOrderId;
 $arrRequest['pg_user_phone'] = $strCustomerPhone;
 $arrRequest['pg_user_contact_email'] = $strCustomerEmail;
 $arrRequest['pg_user_email'] = $strCustomerEmail;
-//$arrRequest['pg_user_ip'] = $_SERVER['REMOTE_ADDR'];
 
 
 if(!empty($strSiteUrl))
