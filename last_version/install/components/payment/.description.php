@@ -19,6 +19,7 @@ foreach($arrStatusName as $key => $value){
 }
 
 $vatValues = array(
+	'none' => 'Не облагается',
 	'0' => '0%',
 	'10' => '10%',
 	'18' => '18%',
