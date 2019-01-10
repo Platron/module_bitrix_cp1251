@@ -111,7 +111,8 @@ if ($arrOrder['PRICE_DELIVERY'] > 0) {
 	}
 	$ofdReceiptItem->price = round($arrOrder['PRICE_DELIVERY'], 2);
 	$ofdReceiptItem->quantity = 1;
-	$ofdReceiptItem->vat = CSalePaySystemAction::GetParamValue("OFD_VAT") == 'none'? 'none': 18;
+	$ofdReceiptItem->vat = CSalePaySystemAction::GetParamValue("OFD_VAT") == 'none'? 'none': 20;
+	$ofdReceiptItem->type = 'service';
 	$ofdReceiptItems[] = $ofdReceiptItem;
 }
 $arrRequest['pg_description'] = 'Order ID: '.$nOrderId;
