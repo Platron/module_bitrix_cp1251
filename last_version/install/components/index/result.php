@@ -43,7 +43,7 @@ if(!($arrOrder = CSaleOrder::GetByID($nOrderId)))
 	PlatronIO::makeResponse($strScriptName, $strSecretKey, 'error',
 		'order not found', $strSalt);
 
-if($nOrderAmount != $arrOrder['PRICE'])
+if($nOrderAmount != ($arrOrder['PRICE'] - $arrOrder['SUM_PAID']))
 	PlatronIO::makeResponse($strScriptName, $strSecretKey, 'error',
 		'amount is not correct', $strSalt);
 
