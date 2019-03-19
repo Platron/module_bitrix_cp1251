@@ -175,6 +175,8 @@ $arrRequest['pg_sig'] = PlatronSignature::make('init_payment.php', $arrRequest, 
 try {
 	$initPaymentResponse = PlatronIO::doApiRequest('init_payment.php', $arrRequest, $strSecretKey);
 
+	CSaleOrder::Update($nOrderId, Array('PAY_VOUCHER_NUM' => (string) $initPaymentResponse->pg_payment_id, 'PAY_VOUCHER_DATE' => new \Bitrix\Main\Type\DateTime));
+
 	if (CSalePaySystemAction::GetParamValue("OFD_SEND_RECEIPT") == 'Y') {
 
 		$paymentId = $initPaymentResponse->pg_payment_id;
