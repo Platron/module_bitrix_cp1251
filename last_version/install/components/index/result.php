@@ -67,8 +67,17 @@ if($arrRequest["pg_result"] == 1){
 		
 		return false;
 	}
+
+	$paidInfo = array(
+		"PS_STATUS" 		=> "Y",
+		"PS_STATUS_CODE"	=> 1,
+		"PS_RESPONSE_DATE"	=> new \Bitrix\Main\Type\DateTime,
+		"PS_SUM"			=> (double) $nOrderAmount,
+		"PS_CURRENCY"		=> $arrRequest['pg_ps_currency'],
+		'PS_STATUS_DESCRIPTION'	=> 'ok'
+	);
 		
-	if(!CSaleOrder::PayOrder($nOrderId, "Y"))
+	if(!CSaleOrder::PayOrder($nOrderId, "Y", true, true, 0, $paidInfo))
 		PlatronIO::makeResponse($strScriptName, $strSecretKey, "error",
 			"Order can\'t be payed", $strSalt);
 
