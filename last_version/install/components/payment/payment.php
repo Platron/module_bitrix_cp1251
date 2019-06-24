@@ -109,6 +109,9 @@ if ($arrOrder['PRICE_DELIVERY'] > 0) {
 	} else {
 		$ofdReceiptItem->label = GetMessage('OFD_DELIVERY_DESCR');
 	}
+	if (empty($ofdReceiptItem->label)) {
+		$ofdReceiptItem->label = 'Delivery';
+	}
 	$ofdReceiptItem->price = round($arrOrder['PRICE_DELIVERY'], 2);
 	$ofdReceiptItem->quantity = 1;
 	$ofdReceiptItem->vat = CSalePaySystemAction::GetParamValue("OFD_VAT") == 'none'? 'none': 20;
