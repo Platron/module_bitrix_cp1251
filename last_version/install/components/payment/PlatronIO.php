@@ -138,7 +138,7 @@ class PlatronIO {
 		$result = [];
 		$i = 0;
 		foreach ($receiptItems as $receiptItem) {
-			foreach ($receitpItem->toArray() as $name => $value) {
+			foreach ($receiptItem->toArray() as $name => $value) {
 				$result['pg_items[' . $i . '][' . $name . ']'] = $value;
 			}
 			$i++;
