@@ -170,35 +170,14 @@ $arrRequest['pg_encoding'] = LANG_CHARSET;
  * Platron Request
  */
 $arrRequest['cms_payment_module'] = 'BITRIX_'.LANG_CHARSET;
-$arrRequest['pg_sig'] = PlatronSignature::make('init_payment.php', $arrRequest, $strSecretKey);
 
-try {
-	$initPaymentResponse = PlatronIO::doApiRequest('init_payment.php', $arrRequest, $strSecretKey);
-
-	CSaleOrder::Update($nOrderId, Array('PAY_VOUCHER_NUM' => (string) $initPaymentResponse->pg_payment_id, 'PAY_VOUCHER_DATE' => new \Bitrix\Main\Type\DateTime));
-
-	if (CSalePaySystemAction::GetParamValue("OFD_SEND_RECEIPT") == 'Y') {
-
-		$paymentId = $initPaymentResponse->pg_payment_id;
-
-		$ofdReceiptRequest = new OfdReceiptRequest($nMerchantId, $paymentId);
-		$ofdReceiptRequest->items = $ofdReceiptItems;
-		$ofdReceiptRequest->prepare();
-		$ofdReceiptRequest->sign($strSecretKey);
-
-		$ofdReceiptResponse = PlatronIO::doApiRequest('receipt.php', array('pg_xml'=>$ofdReceiptRequest->asXml()), $strSecretKey);
-	}
-} catch (Exception $e) {
-	AddMessage2Log($e->getMessage(), 'platron');
-	//echo '<p class="errortext">' . GetMessage("PLATRON_CREATE_PAYMENT_FAILED"); . '</p>';
-	$errorMessage = GetMessage("PLATRON_ERROR_TRY_LATER");
-}
+$paymentUrl = PlatronIO::createPaymentUrl($arrRequest, $ofdReceiptItems, $strSecretKey);
 
 ?>
 <?php if (isset($errorMessage)): ?>
 	<p><font class="errortext"><?= $errorMessage ?></font></p>
 <?php else: ?>
-	<form method="post" action="<?= $initPaymentResponse->pg_redirect_url ?>">
+	<form method="post" action="<?= htmlentities($paymentUrl) ?>">
 		<?php if (file_exists(dirname(__FILE__) . '/custom_pay_button.php')): ?>
 			<?php include dirname(__FILE__) . '/custom_pay_button.php'; ?>
 		<?php else: ?>

@@ -1,9 +1,12 @@
 <?php
 class PlatronIO {
+	const PLATRON_URL = 'https://www.platron.ru';
+	const PAYMENT_ENDPOINT = 'payment.php';
+
 	public static function doApiRequest($scriptName, $params, $secretKey) {
 		$ch = curl_init();
 
-		curl_setopt($ch, CURLOPT_URL,"https://www.platron.ru/" . $scriptName);
+		curl_setopt($ch, CURLOPT_URL, self::PLATRON_URL . "/" . $scriptName);
 		curl_setopt($ch, CURLOPT_POST, 1);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -116,6 +119,32 @@ class PlatronIO {
 	public static function emailIsValid($strEmail)
 	{
 		return preg_match('/^[\w.+-]+@[\w.-]+\.\w{2,}$/s', $strEmail);
+	}
+
+	public function createPaymentUrl($requestParameters, $receiptItems, $secretKey)
+	{
+		$parameters = array_merge($requestParameters, self::convertReceiptItems($receiptItems));
+
+		$parameters['pg_sig'] = PlatronSignature::make(self::PAYMENT_ENDPOINT, $parameters, $secretKey);
+
+		$url = self::PLATRON_URL . '/' . self::PAYMENT_ENDPOINT
+			. '?' . http_build_query($parameters);
+
+		return $url;
+	}
+
+	private static function convertReceiptItems($receiptItems)
+	{
+		$result = [];
+		$i = 0;
+		foreach ($receiptItems as $receiptItem) {
+			foreach ($receitpItem->toArray() as $name => $value) {
+				$result['pg_items[' . $i . '][' . $name . ']'] = $value;
+			}
+			$i++;
+		}
+
+		return $result;
 	}
 }
 ?>

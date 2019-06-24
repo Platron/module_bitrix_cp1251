@@ -47,6 +47,8 @@ if($nOrderAmount != ($arrOrder['PRICE'] - $arrOrder['SUM_PAID']))
 	PlatronIO::makeResponse($strScriptName, $strSecretKey, 'error',
 		'amount is not correct', $strSalt);
 
+CSaleOrder::Update($nOrderId, Array('PAY_VOUCHER_NUM' => (string) $arrRequest['pg_payment_id'], 'PAY_VOUCHER_DATE' => new \Bitrix\Main\Type\DateTime));
+
 if($arrRequest["pg_result"] == 1){
 	if($arrOrder['PAYED']=="Y")
 		PlatronIO::makeResponse($strScriptName, $strSecretKey, "ok",
