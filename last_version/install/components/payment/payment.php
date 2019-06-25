@@ -85,39 +85,12 @@ else
 $arrRequest['pg_amount']      = $nAmount;
 
 $basketList = CSaleBasket::GetList(array(), array("ORDER_ID" => $nOrderId));
-$arrItems = array();
-$ofdReceiptItems = array();
-while ($arrItem = $basketList->Fetch()) {
-	$arrItems[] = $arrItem['NAME'].', ';
-	
-	$ofdReceiptItem = new OfdReceiptItem();
-	if (toUpper(LANG_CHARSET) == "WINDOWS-1251") {
-		$ofdReceiptItem->label = iconv('cp1251', 'utf-8', $arrItem['NAME']);
-	} else {
-		$ofdReceiptItem->label = $arrItem['NAME'];
-	}
-	$ofdReceiptItem->label = mb_substr($ofdReceiptItem->label, 0, 128);
-	$ofdReceiptItem->price = round($arrItem['PRICE'], 2);
-	$ofdReceiptItem->quantity = round($arrItem['QUANTITY'], 3);
-	$ofdReceiptItem->vat = CSalePaySystemAction::GetParamValue("OFD_VAT");
-	$ofdReceiptItems[] = $ofdReceiptItem;
+if (CSalePaySystemAction::GetParamValue("OFD_SEND_RECEIPT") == 'Y') {
+	$ofdReceiptItems = createReceiptItems($basketList, $arrOrder['PRICE_DELIVERY']);
+} else {
+	$ofdReceiptItems = [];
 }
-if ($arrOrder['PRICE_DELIVERY'] > 0) {
-	$ofdReceiptItem = new OfdReceiptItem();
-	if (toUpper(LANG_CHARSET) == "WINDOWS-1251") {
-		$ofdReceiptItem->label = iconv('cp1251', 'utf-8', GetMessage('OFD_DELIVERY_DESCR'));
-	} else {
-		$ofdReceiptItem->label = GetMessage('OFD_DELIVERY_DESCR');
-	}
-	if (empty($ofdReceiptItem->label)) {
-		$ofdReceiptItem->label = 'Delivery';
-	}
-	$ofdReceiptItem->price = round($arrOrder['PRICE_DELIVERY'], 2);
-	$ofdReceiptItem->quantity = 1;
-	$ofdReceiptItem->vat = CSalePaySystemAction::GetParamValue("OFD_VAT") == 'none'? 'none': 20;
-	$ofdReceiptItem->type = 'service';
-	$ofdReceiptItems[] = $ofdReceiptItem;
-}
+
 $arrRequest['pg_description'] = 'Order ID: '.$nOrderId;
 $arrRequest['pg_user_phone'] = $strCustomerPhone;
 $arrRequest['pg_user_contact_email'] = $strCustomerEmail;
@@ -175,6 +148,42 @@ $arrRequest['pg_encoding'] = LANG_CHARSET;
 $arrRequest['cms_payment_module'] = 'BITRIX_'.LANG_CHARSET;
 
 $paymentUrl = PlatronIO::createPaymentUrl($arrRequest, $ofdReceiptItems, $strSecretKey);
+
+function createReceiptItems($basketList, $deliveryPrice)
+{
+	$ofdReceiptItems = array();
+	while ($arrItem = $basketList->Fetch()) {
+		$ofdReceiptItem = new OfdReceiptItem();
+		if (toUpper(LANG_CHARSET) == "WINDOWS-1251") {
+			$ofdReceiptItem->label = iconv('cp1251', 'utf-8', $arrItem['NAME']);
+		} else {
+			$ofdReceiptItem->label = $arrItem['NAME'];
+		}
+		$ofdReceiptItem->label = mb_substr($ofdReceiptItem->label, 0, 128);
+		$ofdReceiptItem->price = round($arrItem['PRICE'], 2);
+		$ofdReceiptItem->quantity = round($arrItem['QUANTITY'], 3);
+		$ofdReceiptItem->vat = CSalePaySystemAction::GetParamValue("OFD_VAT");
+		$ofdReceiptItems[] = $ofdReceiptItem;
+	}
+	if ($deliveryPrice > 0) {
+		$ofdReceiptItem = new OfdReceiptItem();
+		if (toUpper(LANG_CHARSET) == "WINDOWS-1251") {
+			$ofdReceiptItem->label = iconv('cp1251', 'utf-8', GetMessage('OFD_DELIVERY_DESCR'));
+		} else {
+			$ofdReceiptItem->label = GetMessage('OFD_DELIVERY_DESCR');
+		}
+		if (empty($ofdReceiptItem->label)) {
+			$ofdReceiptItem->label = 'Delivery';
+		}
+		$ofdReceiptItem->price = round($deliveryPrice, 2);
+		$ofdReceiptItem->quantity = 1;
+		$ofdReceiptItem->vat = CSalePaySystemAction::GetParamValue("OFD_VAT") == 'none'? 'none': 20;
+		$ofdReceiptItem->type = 'service';
+		$ofdReceiptItems[] = $ofdReceiptItem;
+	}
+
+	return $ofdReceiptItems;
+}
 
 ?>
 <?php if (isset($errorMessage)): ?>
