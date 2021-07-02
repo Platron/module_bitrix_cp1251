@@ -41,7 +41,7 @@ if(!PlatronIO::emailIsValid($strCustomerEmail)){
 	exit();
 }
 
-$nAmount = CSalePaySystemAction::GetParamValue("SHOULD_PAY");
+$nAmount = (strlen(CSalePaySystemAction::GetParamValue("SHOULD_PAY")) > 0) ? CSalePaySystemAction::GetParamValue("SHOULD_PAY") : $GLOBALS["SALE_INPUT_PARAMS"]["ORDER"]["SHOULD_PAY"];
 $nMerchantId = CSalePaySystemAction::GetParamValue("SHOP_MERCHANT_ID");
 $strSecretKey = CSalePaySystemAction::GetParamValue("SHOP_SECRET_KEY");
 $bTestingMode = CSalePaySystemAction::GetParamValue("SHOP_TESTING_MODE") == "Y"? 1 : 0;
